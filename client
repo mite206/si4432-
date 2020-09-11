@@ -1,0 +1,79 @@
+#include <SPI.h>
+#include <RH_RF22.h>
+
+// Singleton instance of the radio driver
+RH_RF22 rf22;
+
+void setup() 
+{
+  Serial.begin(9600);
+  if (!rf22.init())
+    Serial.println("init failed");
+  // Defaults after init are 434.0MHz, 0.05MHz AFC pull-in, modulation FSK_Rb2_4Fd36
+  pinMode(6,INPUT);
+  pinMode(7,INPUT);
+  pinMode(8,INPUT);
+  pinMode(9,INPUT);
+}
+
+void loop()
+{
+  Serial.println("Sending to rf22_server");
+  // Send a message to rf22_server
+
+  int switchaa = digitalRead(9);//讀取按鍵aa值
+  if (switchaa == HIGH)
+  {
+  uint8_t data[] = "mite key a";
+  rf22.send(data, sizeof(data));  
+  rf22.waitPacketSent();
+  // Now wait for a reply
+  }
+
+int switchbb = digitalRead(8);//讀取按鍵bb
+if (switchbb == HIGH)
+{
+  uint8_t data[] = "mite key b";
+  rf22.send(data,sizeof(data));
+  rf22.waitPacketSent();
+}
+
+int switchcc = digitalRead(7);//讀取按鍵cc
+if (switchcc == HIGH)
+{
+  uint8_t data[]= "mite key c";
+  rf22.send(data,sizeof(data));
+  rf22.waitPacketSent();
+}
+
+int switchdd = digitalRead(6);
+if (switchdd == HIGH)
+{
+  uint8_t data[]="mite key d";
+  rf22.send(data,sizeof(data));
+  rf22.waitPacketSent();
+}
+  
+  uint8_t buf[RH_RF22_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+  
+
+  if (rf22.waitAvailableTimeout(500))
+  { 
+    // Should be a reply message for us now   
+    if (rf22.recv(buf, &len))
+    {
+      Serial.print("got reply: ");
+      Serial.println((char*)buf);
+    }
+    else
+    {
+      Serial.println("recv failed");
+    }
+  }
+  else
+  {
+    Serial.println("No reply, is rf22_server running?");
+  }
+  delay(200);
+}
